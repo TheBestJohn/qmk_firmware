@@ -5,6 +5,7 @@
 #define _LOWER 1
 #define _RAISE 2
 #define _ADJUST 3
+static bool tabbing = false;
 
 enum custom_keycodes {
   WORKMAN = SAFE_RANGE,
@@ -25,7 +26,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┐        ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┤
      CTL_T(KC_MPLY), KC_Z, KC_X, KC_M,   KC_C,    KC_V,    KC_LGUI,          KC_END,  KC_K,    KC_L,    KC_COMM, KC_DOT,  KC_SLSH, KC_ENT,
   //└────────┴────────┴────────┴───┬────┴───┬────┴───┬────┴───┬────┘        └───┬────┴───┬────┴───┬────┴───┬────┴────────┴────────┴────────┘
-                                    KC_RALT, LOWER,   KC_SPC,                    KC_SPC,  RAISE,   KC_LGUI
+                                    KC_LALT, LOWER,   KC_SPC,                    KC_SPC,  RAISE,   KC_LGUI
                                 // └────────┴────────┴────────┘                 └────────┴────────┴────────┘
   ),
   [_LOWER] = LAYOUT(
@@ -105,6 +106,28 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       }
       return false;
       break;
+    case KC_TAB:
+      if (MOD_BIT(KC_LALT)) {
+        tabbing = true;
+      }
+      if (record->event.pressed) {
+        register_code(KC_TAB);
+      } else {
+        unregister_code(KC_TAB);
+      }
+
+      return false;
+      break;
+    case KC_LALT:
+      if (record->event.pressed) {
+        register_code(KC_LALT);
+      } else {
+        unregister_code(KC_LALT);
+        tabbing = false;
+      }
+      return false;
+
+      break;
   }
   return true;
 }
@@ -118,6 +141,16 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
         }
     }
     else if (index == 1) {
+      if (tabbing)
+      {
+        if (clockwise) {
+					tap_code(KC_LEFT);
+				} else {
+					tap_code(KC_RGHT);
+				}
+        return true;
+      }
+      
 		switch(get_highest_layer(layer_state)){
 			case _LOWER:
 				if (clockwise) {
